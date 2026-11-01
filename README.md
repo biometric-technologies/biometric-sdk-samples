@@ -60,7 +60,9 @@ The summary lists every image that failed to encode and every comparison that we
   does not initialize at all (`UnsatisfiedLinkError: no jniopencv_highgui`), including the iris part,
   because face and iris are set up together. Current Ubuntu images and most servers have no GTK 2.
   To fix in the SDK: initialize face lazily so iris works without it, and move to an OpenCV build
-  without the GTK dependency (or drop objdetect for the face detector). CI installs GTK 2 for now.
+  without the GTK dependency (or drop objdetect for the face detector). CI installs GTK 2 for now;
+  with it, face encodes all 8 photos and all 28 comparisons are as expected (same person 0.25 to
+  0.42, different people 1.28 to 1.57, threshold 1.0).
 - **JVM, iris:** 11 of 12 images encoded, all 55 comparisons as expected on iris-v2 (e0e02e4);
   `iris-000-L-2` is not encoded (no iris found).
 
