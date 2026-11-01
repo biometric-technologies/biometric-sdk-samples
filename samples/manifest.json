@@ -1,0 +1,185 @@
+{
+ "description": "Sample images for the SDK checks. The images are not stored in this repository: scripts/fetch-samples.sh downloads them from the private Iriscan dataset mirror. person = identity; two images with the same person must match, all others must not.",
+ "samples": [
+  {
+   "id": "iris-000-L-0",
+   "modality": "iris",
+   "person": "casia-thousand-000",
+   "eye": "left",
+   "repository": "casia/iris-v4",
+   "path": "CASIA-Iris-Thousand/000/L/S5000L00.jpg"
+  },
+  {
+   "id": "iris-000-L-1",
+   "modality": "iris",
+   "person": "casia-thousand-000",
+   "eye": "left",
+   "repository": "casia/iris-v4",
+   "path": "CASIA-Iris-Thousand/000/L/S5000L01.jpg"
+  },
+  {
+   "id": "iris-000-L-2",
+   "modality": "iris",
+   "person": "casia-thousand-000",
+   "eye": "left",
+   "repository": "casia/iris-v4",
+   "path": "CASIA-Iris-Thousand/000/L/S5000L02.jpg"
+  },
+  {
+   "id": "iris-001-L-0",
+   "modality": "iris",
+   "person": "casia-thousand-001",
+   "eye": "left",
+   "repository": "casia/iris-v4",
+   "path": "CASIA-Iris-Thousand/001/L/S5001L00.jpg"
+  },
+  {
+   "id": "iris-001-L-1",
+   "modality": "iris",
+   "person": "casia-thousand-001",
+   "eye": "left",
+   "repository": "casia/iris-v4",
+   "path": "CASIA-Iris-Thousand/001/L/S5001L01.jpg"
+  },
+  {
+   "id": "iris-001-L-2",
+   "modality": "iris",
+   "person": "casia-thousand-001",
+   "eye": "left",
+   "repository": "casia/iris-v4",
+   "path": "CASIA-Iris-Thousand/001/L/S5001L02.jpg"
+  },
+  {
+   "id": "iris-002-L-0",
+   "modality": "iris",
+   "person": "casia-thousand-002",
+   "eye": "left",
+   "repository": "casia/iris-v4",
+   "path": "CASIA-Iris-Thousand/002/L/S5002L00.jpg"
+  },
+  {
+   "id": "iris-002-L-1",
+   "modality": "iris",
+   "person": "casia-thousand-002",
+   "eye": "left",
+   "repository": "casia/iris-v4",
+   "path": "CASIA-Iris-Thousand/002/L/S5002L01.jpg"
+  },
+  {
+   "id": "iris-002-L-2",
+   "modality": "iris",
+   "person": "casia-thousand-002",
+   "eye": "left",
+   "repository": "casia/iris-v4",
+   "path": "CASIA-Iris-Thousand/002/L/S5002L02.jpg"
+  },
+  {
+   "id": "iris-003-L-0",
+   "modality": "iris",
+   "person": "casia-thousand-003",
+   "eye": "left",
+   "repository": "casia/iris-v4",
+   "path": "CASIA-Iris-Thousand/003/L/S5003L00.jpg"
+  },
+  {
+   "id": "iris-003-L-1",
+   "modality": "iris",
+   "person": "casia-thousand-003",
+   "eye": "left",
+   "repository": "casia/iris-v4",
+   "path": "CASIA-Iris-Thousand/003/L/S5003L01.jpg"
+  },
+  {
+   "id": "iris-003-L-2",
+   "modality": "iris",
+   "person": "casia-thousand-003",
+   "eye": "left",
+   "repository": "casia/iris-v4",
+   "path": "CASIA-Iris-Thousand/003/L/S5003L02.jpg"
+  },
+  {
+   "id": "face-000-0",
+   "modality": "face",
+   "person": "casia-face-000",
+   "repository": "casia/face-v5",
+   "path": "000/000_0.bmp"
+  },
+  {
+   "id": "face-000-1",
+   "modality": "face",
+   "person": "casia-face-000",
+   "repository": "casia/face-v5",
+   "path": "000/000_1.bmp"
+  },
+  {
+   "id": "face-000-2",
+   "modality": "face",
+   "person": "casia-face-000",
+   "repository": "casia/face-v5",
+   "path": "000/000_2.bmp"
+  },
+  {
+   "id": "face-001-0",
+   "modality": "face",
+   "person": "casia-face-001",
+   "repository": "casia/face-v5",
+   "path": "001/001_0.bmp"
+  },
+  {
+   "id": "face-001-1",
+   "modality": "face",
+   "person": "casia-face-001",
+   "repository": "casia/face-v5",
+   "path": "001/001_1.bmp"
+  },
+  {
+   "id": "face-001-2",
+   "modality": "face",
+   "person": "casia-face-001",
+   "repository": "casia/face-v5",
+   "path": "001/001_2.bmp"
+  },
+  {
+   "id": "face-002-0",
+   "modality": "face",
+   "person": "casia-face-002",
+   "repository": "casia/face-v5",
+   "path": "002/002_0.bmp"
+  },
+  {
+   "id": "face-002-1",
+   "modality": "face",
+   "person": "casia-face-002",
+   "repository": "casia/face-v5",
+   "path": "002/002_1.bmp"
+  },
+  {
+   "id": "face-002-2",
+   "modality": "face",
+   "person": "casia-face-002",
+   "repository": "casia/face-v5",
+   "path": "002/002_2.bmp"
+  },
+  {
+   "id": "face-003-0",
+   "modality": "face",
+   "person": "casia-face-003",
+   "repository": "casia/face-v5",
+   "path": "003/003_0.bmp"
+  },
+  {
+   "id": "face-003-1",
+   "modality": "face",
+   "person": "casia-face-003",
+   "repository": "casia/face-v5",
+   "path": "003/003_1.bmp"
+  },
+  {
+   "id": "face-003-2",
+   "modality": "face",
+   "person": "casia-face-003",
+   "repository": "casia/face-v5",
+   "path": "003/003_2.bmp"
+  }
+ ]
+}

@@ -1,0 +1,8 @@
+samples/data/
+results/
+sdk/
+.gradle/
+build/
+*.iml
+.idea/
+local.properties
