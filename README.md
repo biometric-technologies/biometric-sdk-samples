@@ -53,6 +53,17 @@ Without `sdk/`, the sample uses the SDK release from Maven Central.
 In GitHub Actions: **SDK samples → Run workflow**, with the SDK branch, tag or commit to check.
 The summary lists every image that failed to encode and every comparison that went wrong.
 
+## What the samples found
+
+- **JVM, face:** the SDK uses OpenCV 4.6.0-1.5.8 from org.bytedeco; its objdetect module loads
+  highgui, which links GTK 2 (`libgtk-x11-2.0.so.0`, `libgdk-x11-2.0.so.0`). Without GTK 2 the SDK
+  does not initialize at all (`UnsatisfiedLinkError: no jniopencv_highgui`), including the iris part,
+  because face and iris are set up together. Current Ubuntu images and most servers have no GTK 2.
+  To fix in the SDK: initialize face lazily so iris works without it, and move to an OpenCV build
+  without the GTK dependency (or drop objdetect for the face detector). CI installs GTK 2 for now.
+- **JVM, iris:** 11 of 12 images encoded, all 55 comparisons as expected on iris-v2 (e0e02e4);
+  `iris-000-L-2` is not encoded (no iris found).
+
 ## Repository secrets
 
 `GITLAB_DEPLOY_USER` and `GITLAB_DEPLOY_TOKEN`: the same deploy token as in iris-lab.

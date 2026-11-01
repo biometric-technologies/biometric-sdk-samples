@@ -29,6 +29,11 @@ jobs:
           GITLAB_USER: ${{ secrets.GITLAB_DEPLOY_USER }}
           GITLAB_TOKEN: ${{ secrets.GITLAB_DEPLOY_TOKEN }}
         run: scripts/fetch-samples.sh
+      # The SDK's face part loads OpenCV (org.bytedeco 4.6.0-1.5.8), whose objdetect module links
+      # GTK 2 through highgui. Runner images no longer ship GTK 2, nor do most servers: install it
+      # here so face is tested; the missing-libraries step below shows what a server needs.
+      - name: GTK 2 for OpenCV highgui
+        run: sudo apt-get update -q && (sudo apt-get install -y -q libgtk2.0-0t64 || sudo apt-get install -y -q libgtk2.0-0)
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -52,8 +57,9 @@ jobs:
           for jar in $(find ~/.gradle/caches -name "opencv-*-linux-x86_64.jar" -o -name "tensorflow-lite-*-linux-x86_64.jar"); do
             unzip -qo "$jar" '*.so*' -d natives
           done
+          # openblas comes from its own bytedeco jar at run time, so it is not a system dependency
           for so in $(find natives -name "libjni*.so"); do
-            missing=$(LD_LIBRARY_PATH=$(dirname "$so") ldd "$so" | grep "not found" | awk '{print $1}' | sort -u | tr '\n' ' ')
+            missing=$(LD_LIBRARY_PATH=$(dirname "$so") ldd "$so" | grep "not found" | awk '{print $1}' | grep -v openblas | sort -u | tr '\n' ' ')
             [ -n "$missing" ] && echo "$(basename "$so"): $missing"
           done | tee results/missing-native-libraries.txt
           if [ -s results/missing-native-libraries.txt ]; then
