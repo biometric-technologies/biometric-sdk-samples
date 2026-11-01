@@ -60,7 +60,17 @@ The summary lists every image that failed to encode and every comparison that we
   does not initialize at all (`UnsatisfiedLinkError: no jniopencv_highgui`), including the iris part,
   because face and iris are set up together. Current Ubuntu images and most servers have no GTK 2.
   Fixed in biometric-sdk 327257e (iris-v2): face is set up apart from iris, so iris keeps working
-  and `face()` reports the cause. Still to fix: the GTK dependency itself. CI installs GTK 2 for now;
+  and `face()` reports the cause. Still to fix: the GTK dependency itself.
+
+  Options considered for the face detector:
+  1. Own Haar cascade detector in common Kotlin, reading the same OpenCV cascade XML files.
+     Removes OpenCV from the JVM build and works in the planned web and C builds. Chosen; in progress.
+  2. A newer org.bytedeco OpenCV build: not checked whether it still links GTK; the dependency stays
+     large, and the web and C builds still have no detector.
+  3. A TensorFlow Lite face detector (BlazeFace or similar) on the TFLite runtime the SDK already
+     uses for FaceNet: more accurate than Haar cascades, but TFLite exists only on the JVM, Android
+     and iOS, so the web and C builds would again be without a detector. Open: to be decided later,
+     possibly as an optional detector next to the Haar one. CI installs GTK 2 for now;
   with it, face encodes all 8 photos and all 28 comparisons are as expected (same person 0.25 to
   0.42, different people 1.28 to 1.57, threshold 1.0).
 - **JVM, iris:** 11 of 12 images encoded, all 55 comparisons as expected on iris-v2 (e0e02e4);
