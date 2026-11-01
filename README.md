@@ -59,8 +59,8 @@ The summary lists every image that failed to encode and every comparison that we
   highgui, which links GTK 2 (`libgtk-x11-2.0.so.0`, `libgdk-x11-2.0.so.0`). Without GTK 2 the SDK
   does not initialize at all (`UnsatisfiedLinkError: no jniopencv_highgui`), including the iris part,
   because face and iris are set up together. Current Ubuntu images and most servers have no GTK 2.
-  To fix in the SDK: initialize face lazily so iris works without it, and move to an OpenCV build
-  without the GTK dependency (or drop objdetect for the face detector). CI installs GTK 2 for now;
+  Fixed in biometric-sdk 327257e (iris-v2): face is set up apart from iris, so iris keeps working
+  and `face()` reports the cause. Still to fix: the GTK dependency itself. CI installs GTK 2 for now;
   with it, face encodes all 8 photos and all 28 comparisons are as expected (same person 0.25 to
   0.42, different people 1.28 to 1.57, threshold 1.0).
 - **JVM, iris:** 11 of 12 images encoded, all 55 comparisons as expected on iris-v2 (e0e02e4);
