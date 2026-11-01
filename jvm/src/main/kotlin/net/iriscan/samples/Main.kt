@@ -83,8 +83,10 @@ private fun readManifest(root: File): List<Sample> {
     val list = JSONObject(File(root, "samples/manifest.json").readText()).getJSONArray("samples")
     return (0 until list.length()).map { i ->
         val s = list.getJSONObject(i)
-        val extension = s.getString("path").substringAfterLast('.')
-        Sample(s.getString("id"), s.getString("modality"), s.getString("person"), File(data, "${s.getString("id")}.$extension"))
+        val id = s.getString("id")
+        // fetch-samples.sh saves every image as <id>.<original extension>
+        val file = data.listFiles()?.firstOrNull { it.nameWithoutExtension == id } ?: File(data, id)
+        Sample(id, s.getString("modality"), s.getString("person"), file)
     }
 }
 

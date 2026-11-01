@@ -15,15 +15,20 @@ Each sample:
 
 ## Sample images
 
-12 iris images (4 people, left eye, 3 images each, CASIA-Iris-Thousand) and 12 face photos
-(4 people, 3 photos each, CASIA-FaceV5). The images are **not stored in this repository**:
-their licences allow research use but not redistribution, so
-[scripts/fetch-samples.sh](scripts/fetch-samples.sh) downloads them from the private Iriscan
-dataset mirror on GitLab into `samples/data/` (ignored by git). It needs `GITLAB_USER` and
-`GITLAB_TOKEN` with read access to `iriscan/datasets`, or your own GitLab login through git.
+- **Iris:** 12 near-infrared images, 4 people, left eye, 3 images each, from CASIA-Iris-Thousand.
+  No openly licensed near-infrared iris set with several images of the same eye exists, so these
+  come from the private Iriscan mirror on GitLab. CASIA allows research use but not
+  redistribution: the images are downloaded at run time and never committed.
+- **Face:** 8 photos, 4 adults, a neutral and a smiling front view each, from the
+  [Face Research Lab London Set](https://doi.org/10.6084/m9.figshare.5047666) (DeBruine and Jones,
+  CC BY 4.0; the participants consented to research use). Downloaded from figshare.
 
-To add images, add entries to the manifest: `repository` and `path` inside the GitLab group,
-and `person`, which decides what must match.
+[scripts/fetch-samples.sh](scripts/fetch-samples.sh) puts them into `samples/data/` (ignored by git).
+For the iris images it needs `GITLAB_USER` and `GITLAB_TOKEN` with read access to
+`iriscan/datasets`, or your own GitLab login through git.
+
+To add images, add entries to the manifest: `source` (`gitlab` with `repository` and `path`, or
+`zip` with `url` and `member`), and `person`, which decides what must match.
 
 ## Platforms
 
