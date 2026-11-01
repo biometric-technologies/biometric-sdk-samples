@@ -52,27 +52,44 @@ fun main(args: Array<String>) {
         exitProcess(2)
     }
 
-    BiometricSdkFactory.initialize(
-        BiometricSdkFactory.configBuilder()
-            .withIris(IrisExtractProperties(), IrisEncodeProperties(), IrisMatchProperties())
-            .withFace(
-                extractor = FaceExtractProperties(),
-                encoder = FaceEncodeProperties(
-                    FaceNetModelConfiguration(
-                        path = FACENET_MODEL_URL,
-                        inputWidth = FACENET_INPUT_SIZE, inputHeight = FACENET_INPUT_SIZE,
-                        outputLength = FACENET_EMBEDDING_LENGTH,
-                        modelChecksum = null, modelChecksumMethod = null, overrideCacheOnWrongChecksum = null,
-                    )
-                ),
-                matcher = FaceMatchProperties(threshold = FACE_MATCH_THRESHOLD),
-            )
-            .build()
-    )
+    // Face needs native libraries (OpenCV, TensorFlow Lite) on the JVM. If they do not load, the
+    // failure is reported as a face result and the iris part still runs.
+    var faceUnavailable: String? = null
+    try {
+        BiometricSdkFactory.initialize(
+            BiometricSdkFactory.configBuilder()
+                .withIris(IrisExtractProperties(), IrisEncodeProperties(), IrisMatchProperties())
+                .withFace(
+                    extractor = FaceExtractProperties(),
+                    encoder = FaceEncodeProperties(
+                        FaceNetModelConfiguration(
+                            path = FACENET_MODEL_URL,
+                            inputWidth = FACENET_INPUT_SIZE, inputHeight = FACENET_INPUT_SIZE,
+                            outputLength = FACENET_EMBEDDING_LENGTH,
+                            modelChecksum = null, modelChecksumMethod = null, overrideCacheOnWrongChecksum = null,
+                        )
+                    ),
+                    matcher = FaceMatchProperties(threshold = FACE_MATCH_THRESHOLD),
+                )
+                .build()
+        )
+    } catch (e: Throwable) {
+        faceUnavailable = "SDK did not initialize face: ${e::class.simpleName}: ${e.message}"
+        System.err.println(faceUnavailable)
+        e.printStackTrace()
+        BiometricSdkFactory.initialize(
+            BiometricSdkFactory.configBuilder()
+                .withIris(IrisExtractProperties(), IrisEncodeProperties(), IrisMatchProperties())
+                .build()
+        )
+    }
     val sdk = BiometricSdkFactory.getInstance() ?: error("SDK did not initialize")
 
     val decoderProblems = checkImageDecoder(sdk, samples)
-    val encoded = samples.map { encode(sdk, it) }
+    val encoded = samples.map { sample ->
+        if (sample.modality == "face" && faceUnavailable != null) Encoded(sample, null, faceUnavailable, 0)
+        else encode(sdk, sample)
+    }
     val comparisons = compareAll(sdk, encoded)
     val failures = report(root, encoded, comparisons, decoderProblems)
     exitProcess(if (failures == 0) 0 else 1)

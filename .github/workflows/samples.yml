@@ -45,6 +45,18 @@ jobs:
         if: failure()
         run: |
           grep -E "^e: |error:|What went wrong|FAILED|Exception" build.log | head -40 | sed 's/^/::error::/' || true
+      - name: Native libraries the OpenCV and TensorFlow Lite bindings cannot find
+        if: always()
+        run: |
+          mkdir -p results natives
+          for jar in $(find ~/.gradle/caches -name "opencv-*-linux-x86_64.jar" -o -name "tensorflow-lite-*-linux-x86_64.jar"); do
+            unzip -qo "$jar" '*.so*' -d natives
+          done
+          for so in $(find natives -name "libjni*.so"); do
+            missing=$(LD_LIBRARY_PATH=$(dirname "$so") ldd "$so" | grep "not found" | awk '{print $1}' | sort -u | tr '\n' ' ')
+            [ -n "$missing" ] && echo "$(basename "$so"): $missing"
+          done | tee results/missing-native-libraries.txt
+          cp build.log results/ 2>/dev/null || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
