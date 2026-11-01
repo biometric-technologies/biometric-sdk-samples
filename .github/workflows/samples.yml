@@ -56,6 +56,9 @@ jobs:
             missing=$(LD_LIBRARY_PATH=$(dirname "$so") ldd "$so" | grep "not found" | awk '{print $1}' | sort -u | tr '\n' ' ')
             [ -n "$missing" ] && echo "$(basename "$so"): $missing"
           done | tee results/missing-native-libraries.txt
+          if [ -s results/missing-native-libraries.txt ]; then
+            { echo "### System libraries missing for the native bindings"; echo; echo '```'; cat results/missing-native-libraries.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          fi
           cp build.log results/ 2>/dev/null || true
       - uses: actions/upload-artifact@v4
         if: always()
