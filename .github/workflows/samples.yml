@@ -4,7 +4,7 @@ name: SDK samples
 # jvm/ is the Kotlin check; every other platform exists when <platform>/ci/run.sh exists (see
 # README, "Platform contract").
 # Needs the repository secrets GITLAB_DEPLOY_USER and GITLAB_DEPLOY_TOKEN (read access to the
-# iriscan/datasets group on GitLab), the same as in iris-lab.
+# iriscan/datasets group on GitLab), the same as in biometric-lab.
 
 on:
   workflow_dispatch:

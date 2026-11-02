@@ -28,7 +28,7 @@ whose next step is blocked (waiting for a merge or for an answer) and say so in 
 - Never change `.github/workflows`, secrets or repository settings. If the workflow needs a change
   (a tool, a runner, a step), write it under "Questions" and stop that platform.
 - SDK changes (needed for C, or bugs the samples find) go to biometric-sdk as their own small PR
-  `auto/<platform>-<topic>` into `iris-v2`, following iris-lab `autopilot/README.md`. Never push to
+  `auto/<platform>-<topic>` into `iris-v2`, following biometric-lab `autopilot/README.md`. Never push to
   `main` here or to `iris-v2`/`master` there, never merge, never force-push, never close PRs.
 - Commits: plain English, no AI attribution, no Co-Authored-By, no session links.
 - Append to `log.md`: `- <UTC date time> | <platform> | <branch>@<short sha> (PR #N) | <step and what it did> | samples CI: <pending/green/red>`;
@@ -84,7 +84,7 @@ the same PR that does it.
   `sdk/`, builds the app, runs the check for iris.
 
 ### finger (every platform, later)
-- When biometric-sdk `iris-v2` has a public fingerprint API (iris-lab `autopilot/finger-design.md`,
+- When biometric-sdk `iris-v2` has a public fingerprint API (biometric-lab `finger/DESIGN.md`,
   steps F1 to F9), add a step "fingerprints in the check" to every platform. Until then the
   samples ignore `"modality": "finger"` in the manifest.
 

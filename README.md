@@ -1,8 +1,10 @@
 # Biometric SDK samples
 
-Private. Small programs that use [biometric-sdk](https://github.com/biometric-technologies/biometric-sdk)
+Small programs that use [biometric-sdk](https://github.com/biometric-technologies/biometric-sdk)
 the way an application does, one per platform, all running on the same sample images.
 They show whether the SDK works end to end on each platform and what to fix when it does not.
+The images are not in this repository: they are downloaded at run time (see below), because the
+iris and fingerprint sets may be used for research but not redistributed.
 
 Each sample:
 
@@ -113,4 +115,4 @@ The summary lists every image that failed to encode and every comparison that we
 
 ## Repository secrets
 
-`GITLAB_DEPLOY_USER` and `GITLAB_DEPLOY_TOKEN`: the same deploy token as in iris-lab.
+`GITLAB_DEPLOY_USER` and `GITLAB_DEPLOY_TOKEN`: the same deploy token as in biometric-lab.
