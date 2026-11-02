@@ -1,21 +1,29 @@
 # Autopilot: platform samples
 
 A scheduled task runs every hour. Each run takes the next platform in the rotation and makes one
-small step of its plan below, as one pull request. Rotation order: java → web → android → ios → c.
+small step of its plan below, on its own branch. Rotation order: java → web → android → ios → c.
 The next platform is the one after the platform of the last line in `log.md`; skip a platform
-whose next step is blocked (waiting for a merge or for an answer) and say so in the log line.
+whose next step is blocked (waiting for an answer) and say so in the log line.
+
+There are no pull requests in this repository. CI is the check: a platform branch whose samples
+all pass is merged into `main` by the workflow and deleted; a red branch stays and is fixed. Only
+SDK changes go through review, as pull requests in biometric-sdk.
 
 ## Rules
 
-- Slava reviews every PR, so each one must be small and easy to understand on its own: one step,
-  one or two commits, roughly 200 changed lines or less (generated project files excluded).
-- Branch `auto/<platform>-<topic>` from `main` (the platform name first, so it never equals a biometric-sdk branch and CI runs it against `iris-v2`), draft PR into `main` titled with what it does.
-  If the step needs an unmerged PR, branch from that PR's branch, set the PR base to it and write
-  "Depends on #N" at the top. At most 2 open autopilot PRs per platform.
-- PR description: what the step adds, how to run it locally, what CI showed, anything to check by
-  hand. Questions for a person go under "Questions".
-- First look at the open autopilot PRs of the platform: the `SDK samples` checks and the results
-  comment the workflow posts on the PR. If one is red, fix that and nothing else.
+- One step per branch, small and easy to read later: one or two commits, roughly 200 changed
+  lines or less (generated project files excluded).
+- Branch `auto/<platform>-<topic>` from `main` (platform one of java, web, android, ios, c; the
+  platform name first, so it never equals a biometric-sdk branch and CI runs it against `iris-v2`).
+  A step that needs an unmerged branch is built on top of it. At most 2 unmerged branches per
+  platform.
+- Commit messages carry what a reviewer would otherwise read in a PR, in full sentences: what
+  the step adds and why, how it works, how to run it locally, anything to check by hand. Code
+  comments explain the why of every non-obvious line. Questions for a person go to the log line
+  and to `## Questions` at the end of this file.
+- First read the results of the platform's unmerged branches: file `<branch>.md` on the branch
+  `ci-results` (e.g. `ci-results:auto/java-face-check.md`; the workflow writes it after every
+  push). If one is red, fix that on its branch and nothing else. A branch that is gone was merged.
 - Follow the platform contract in the main README ("Platform contract"): `<platform>/ci/run.sh`, `results/<platform>.md`
   in the shared table format, non-zero exit on any failed check. Build against the SDK source in
   `sdk/`, never against a release.
@@ -24,23 +32,24 @@ whose next step is blocked (waiting for a merge or for an answer) and say so in 
   Each platform folder gets a short README (requirements, how to run, what it shows).
 - Never commit images or put them into a source folder; copy them into the build at build time.
 - Leave `jvm/`, `samples/manifest.json` and `autopilot-runs.md` alone (the SDK autopilot uses them),
-  except to add images through the manifest in a PR of their own.
+  (the workflow never merges a branch that changes them).
 - Never change `.github/workflows`, secrets or repository settings. If the workflow needs a change
   (a tool, a runner, a step), write it under "Questions" and stop that platform.
-- SDK changes (needed for C, or bugs the samples find) go to biometric-sdk as their own small PR
-  `auto/<platform>-<topic>` into `iris-v2`, following biometric-lab `autopilot/README.md`. Never push to
-  `main` here or to `iris-v2`/`master` there, never merge, never force-push, never close PRs.
+- SDK changes (needed for C, or bugs the samples find) go to biometric-sdk as their own draft PR
+  `auto/<platform>-<topic>` into `iris-v2`, following biometric-lab `autopilot/README.md`, with a
+  detailed description for Slava. Never push to `main` here (except `autopilot/log.md`) or to
+  `iris-v2`/`master` there, never merge there, never force-push, never close PRs.
 - Commits: plain English, no AI attribution, no Co-Authored-By, no session links.
-- Append to `log.md`: `- <UTC date time> | <platform> | <branch>@<short sha> (PR #N) | <step and what it did> | samples CI: <pending/green/red>`;
+- Append to `log.md`: `- <UTC date time> | <platform> | <branch>@<short sha> | <step and what it did> | samples CI: <pending/green, merged/red>`;
   update earlier lines of the platform when you check their results.
 
 ## Plan
 
-Steps are in order; take the first one not done. Mark a step done here (with the PR number) in
-the same PR that does it.
+Steps are in order; take the first one not done. Mark a step done here (with the branch name)
+in the same branch that does it.
 
 ### java (plain Java console application)
-- J1: `java/` Gradle project (`application` plugin, Java 17), SDK from `../sdk` with `includeBuild`
+- J1 (done, #2): `java/` Gradle project (`application` plugin, Java 17), SDK from `../sdk` with `includeBuild`
   as in `jvm/settings.gradle.kts`. `Main.java` reads the manifest, runs the
   check for iris, writes `results/java.md`. `java/ci/run.sh`.
 - J2: face in the same check.
@@ -48,10 +57,12 @@ the same PR that does it.
   what the Kotlin types look like from Java).
 
 ### web (page in the browser, JVM server behind it)
-- W1: `web/server`: Java or Kotlin, JDK `HttpServer`, no framework. `POST /api/encode?modality=iris|face`
+- W1 (done, #4): `web/server`: Java or Kotlin, JDK `HttpServer`, no framework. `POST /api/encode?modality=iris|face`
   with the image bytes returns the template; `POST /api/compare` two templates returns the score and
-  whether they match; `POST /api/identify?modality=…` returns the best person of the sample gallery.
-  `web/ci/run.sh` starts it and runs the check with curl.
+  whether they match. `web/ci/run.sh` starts it and runs the check with curl.
+- W1b (split from W1 to keep the PRs small): `POST /api/identify?modality=…` returns the best person
+  of the sample gallery (the sample photos, encoded at start; `exclude=<id>` leaves one photo out);
+  `web/ci/run.sh` also identifies every photo among the other photos.
 - W2: `web/static/index.html` (plain HTML and JS, no build step): the sample photos as a grid,
   click one or upload your own, see who it is and the score. The server serves it.
 - W3: `web/ci/run.sh` drives the page with Playwright (installed by the script) instead of curl,
