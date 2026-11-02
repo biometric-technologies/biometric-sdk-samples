@@ -1,6 +1,6 @@
-# Samples for auto/iris-template-cols
+# Samples for auto/face-match-threshold
 
-Commit fbe15152f369e552d8f822cc69ec94c12cab6876 of biometric-sdk-samples, biometric-sdk auto/iris-template-cols, run https://github.com/biometric-technologies/biometric-sdk-samples/actions/runs/41429636344
+Commit 0493f4e208e1d61246a9fe77d9a82c26a69afa69 of biometric-sdk-samples, biometric-sdk auto/face-match-threshold, run https://github.com/biometric-technologies/biometric-sdk-samples/actions/runs/41429641040
 Jobs: jvm success, java/web/c success, android skipped, ios skipped
 
 ### java
@@ -18,11 +18,11 @@ Failures: none
 
 ### iris: 12 of 12 images encoded, 66 of 66 comparisons as expected
 
-Same person: 12 of 12 match, scores 0.671 to 0.997. Different people: 54 of 54 do not match, scores 0.518 to 0.597. Average encoding time 270 ms.
+Same person: 12 of 12 match, scores 0.671 to 0.997. Different people: 54 of 54 do not match, scores 0.518 to 0.597. Average encoding time 266 ms.
 
 ### face: 8 of 8 images encoded, 28 of 28 comparisons as expected
 
-Same person: 4 of 4 match, scores 0.247 to 0.421. Different people: 24 of 24 do not match, scores 1.280 to 1.565. Average encoding time 302 ms.
+Same person: 4 of 4 match, scores 0.247 to 0.421. Different people: 24 of 24 do not match, scores 1.280 to 1.565. Average encoding time 298 ms.
 
 All expectations met.
 
