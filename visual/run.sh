@@ -9,6 +9,9 @@ if [ ! -f sdk/settings.gradle.kts ]; then
   exit 1
 fi
 status=0
-sdk/gradlew -p visual run --args="$*" || status=$?
+# Gradle rejects an empty --args, so pass it only when there are arguments
+if [ $# -gt 0 ]; then sdk/gradlew -p visual run --args="$*" || status=$?
+else sdk/gradlew -p visual run || status=$?
+fi
 echo "Open $(pwd)/results/report.html"
 exit $status
