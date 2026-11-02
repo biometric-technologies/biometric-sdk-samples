@@ -22,6 +22,9 @@ Each sample:
 - **Face:** 8 photos, 4 adults, a neutral and a smiling front view each, from the
   [Face Research Lab London Set](https://doi.org/10.6084/m9.figshare.5047666) (DeBruine and Jones,
   CC BY 4.0; the participants consented to research use). Downloaded from figshare.
+- **Fingerprint:** 10 images, 5 left index fingers, 2 impressions each, from CASIA-FingerprintV5
+  (private Iriscan mirror, same terms as CASIA iris). The SDK cannot match fingerprints yet, so
+  every sample skips them; they are listed so all platforms read the same manifest when it can.
 
 [scripts/fetch-samples.sh](scripts/fetch-samples.sh) puts them into `samples/data/` (ignored by git).
 For the iris images it needs `GITLAB_USER` and `GITLAB_TOKEN` with read access to
@@ -34,11 +37,38 @@ To add images, add entries to the manifest: `source` (`gitlab` with `repository`
 
 | Platform | Directory | Status |
 |---|---|---|
-| JVM (Kotlin/Java console) | [jvm](jvm) | Iris and face. Runs in CI on every push and on demand for any SDK branch. |
-| Android | android | Planned: instrumented test on an emulator in CI. Starting point: [biometric-sdk-android-example](https://github.com/biometric-technologies/biometric-sdk-android-example). |
-| iOS | ios | Planned: XCTest on a simulator (macOS runner). Starting point: [biometric-sdk-ios-example](https://github.com/biometric-technologies/biometric-sdk-ios-example). |
-| Web (browser page) | web | Needs a JS/Wasm build of the SDK, which does not exist yet. Iris can be built for the browser because the whole iris pipeline is common Kotlin; face needs TensorFlow Lite and stays unavailable in the browser for now. |
-| C (console) | c | Needs a Kotlin/Native shared library of the SDK with a C header, which does not exist yet. Same split: iris yes, face later. |
+| JVM (Kotlin console) | [jvm](jvm) | Iris and face. Runs in CI on every push and on demand for any SDK branch. |
+| Java (plain Java console) | java | Planned: how a Java developer calls the SDK. |
+| Web (browser page) | web | Planned: a plain HTML page; a small JVM server behind it runs the SDK, so iris and face both work. A browser-only (Wasm) build stays a later option. |
+| Android | android | Planned: app plus instrumented test on an emulator in CI. Starting point: [biometric-sdk-android-example](https://github.com/biometric-technologies/biometric-sdk-android-example). |
+| iOS | ios | Planned: SwiftUI app plus XCTest on a simulator (macOS runner). Starting point: [biometric-sdk-ios-example](https://github.com/biometric-technologies/biometric-sdk-ios-example). |
+| C (console) | c | Needs a Kotlin/Native shared library of the SDK with a C header, which does not exist yet. Iris first; face needs TensorFlow Lite for that target. |
+
+The scheduled platform autopilot builds the planned ones step by step, one small pull request per
+step; its plan and rules are in [autopilot/README.md](autopilot/README.md).
+
+### Platform contract
+
+Every platform except `jvm` exists for CI when `<platform>/ci/run.sh` exists. The workflow runs
+it from the repository root after it has put a biometric-sdk checkout in `sdk/` and the images in
+`samples/data/`. The script builds the sample against `sdk/` (not a release), runs the same check
+as the JVM sample (encode every image, compare every pair of the same modality, same person must
+match, different people must not) and writes `results/<platform>.md`:
+
+```
+### <platform>
+| modality | encoded | comparisons as expected |
+|---|---|---|
+| iris | 12 / 12 | 66 / 66 |
+| face | 8 / 8 | 28 / 28 |
+
+Failures: (one line per image not encoded or comparison not as expected, or "none")
+```
+
+It exits with a non-zero status if anything failed. The workflow puts the table into the run
+summary and, for a branch `auto/*` with an open pull request, into one comment on that PR that is
+updated on every run. A user interface (web page, app screen) may show identification (who is in
+this photo) on top of that; the check stays the same everywhere so platforms can be compared.
 
 ## Running the JVM sample
 
@@ -52,7 +82,8 @@ Without `sdk/`, the sample uses the SDK release from Maven Central.
 
 In GitHub Actions: **SDK samples → Run workflow**, with the SDK branch, tag or commit to check.
 A push to a branch `auto/<name>` of this repository runs the samples against the biometric-sdk
-branch with the same name (used by the scheduled autopilot).
+branch with the same name if there is one (the SDK autopilot uses this), otherwise against
+`iris-v2` (the platform autopilot's branches).
 The summary lists every image that failed to encode and every comparison that went wrong.
 
 ## What the samples found

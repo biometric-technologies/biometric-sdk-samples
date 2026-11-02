@@ -1,5 +1,5 @@
 {
- "description": "Sample images for the SDK checks; none are stored in this repository. scripts/fetch-samples.sh downloads them: iris images from the private Iriscan mirror of CASIA-IrisV4 on GitLab (research licence, no redistribution), face photos from the Face Research Lab London Set (CC BY 4.0, adults who consented to research use). person = identity: two images of the same person must match, all others must not.",
+ "description": "Sample images for the SDK checks; none are stored in this repository. scripts/fetch-samples.sh downloads them: iris and fingerprint images from the private Iriscan mirrors of CASIA-IrisV4 and CASIA-FingerprintV5 on GitLab (research licence, no redistribution), face photos from the Face Research Lab London Set (CC BY 4.0, adults who consented to research use). person = identity: two images of the same person must match, all others must not.",
  "samples": [
   {
    "id": "iris-000-L-0",
@@ -192,6 +192,106 @@
    "url": "https://ndownloader.figshare.com/files/8541964",
    "member": "008_*",
    "licence": "CC BY 4.0, Face Research Lab London Set (DeBruine & Jones 2017), https://doi.org/10.6084/m9.figshare.5047666"
+  },
+  {
+   "id": "finger-000-L1-0",
+   "modality": "finger",
+   "person": "casia-finger-000-L1",
+   "finger": "left index",
+   "repository": "casia/fingerprint-v5",
+   "path": "000/L/000_L1_0.bmp",
+   "source": "gitlab",
+   "licence": "CASIA-FingerprintV5, research use, not for redistribution"
+  },
+  {
+   "id": "finger-000-L1-1",
+   "modality": "finger",
+   "person": "casia-finger-000-L1",
+   "finger": "left index",
+   "repository": "casia/fingerprint-v5",
+   "path": "000/L/000_L1_1.bmp",
+   "source": "gitlab",
+   "licence": "CASIA-FingerprintV5, research use, not for redistribution"
+  },
+  {
+   "id": "finger-001-L1-0",
+   "modality": "finger",
+   "person": "casia-finger-001-L1",
+   "finger": "left index",
+   "repository": "casia/fingerprint-v5",
+   "path": "001/L/001_L1_0.bmp",
+   "source": "gitlab",
+   "licence": "CASIA-FingerprintV5, research use, not for redistribution"
+  },
+  {
+   "id": "finger-001-L1-1",
+   "modality": "finger",
+   "person": "casia-finger-001-L1",
+   "finger": "left index",
+   "repository": "casia/fingerprint-v5",
+   "path": "001/L/001_L1_1.bmp",
+   "source": "gitlab",
+   "licence": "CASIA-FingerprintV5, research use, not for redistribution"
+  },
+  {
+   "id": "finger-002-L1-0",
+   "modality": "finger",
+   "person": "casia-finger-002-L1",
+   "finger": "left index",
+   "repository": "casia/fingerprint-v5",
+   "path": "002/L/002_L1_0.bmp",
+   "source": "gitlab",
+   "licence": "CASIA-FingerprintV5, research use, not for redistribution"
+  },
+  {
+   "id": "finger-002-L1-1",
+   "modality": "finger",
+   "person": "casia-finger-002-L1",
+   "finger": "left index",
+   "repository": "casia/fingerprint-v5",
+   "path": "002/L/002_L1_1.bmp",
+   "source": "gitlab",
+   "licence": "CASIA-FingerprintV5, research use, not for redistribution"
+  },
+  {
+   "id": "finger-003-L1-0",
+   "modality": "finger",
+   "person": "casia-finger-003-L1",
+   "finger": "left index",
+   "repository": "casia/fingerprint-v5",
+   "path": "003/L/003_L1_0.bmp",
+   "source": "gitlab",
+   "licence": "CASIA-FingerprintV5, research use, not for redistribution"
+  },
+  {
+   "id": "finger-003-L1-1",
+   "modality": "finger",
+   "person": "casia-finger-003-L1",
+   "finger": "left index",
+   "repository": "casia/fingerprint-v5",
+   "path": "003/L/003_L1_1.bmp",
+   "source": "gitlab",
+   "licence": "CASIA-FingerprintV5, research use, not for redistribution"
+  },
+  {
+   "id": "finger-004-L1-0",
+   "modality": "finger",
+   "person": "casia-finger-004-L1",
+   "finger": "left index",
+   "repository": "casia/fingerprint-v5",
+   "path": "004/L/004_L1_0.bmp",
+   "source": "gitlab",
+   "licence": "CASIA-FingerprintV5, research use, not for redistribution"
+  },
+  {
+   "id": "finger-004-L1-1",
+   "modality": "finger",
+   "person": "casia-finger-004-L1",
+   "finger": "left index",
+   "repository": "casia/fingerprint-v5",
+   "path": "004/L/004_L1_1.bmp",
+   "source": "gitlab",
+   "licence": "CASIA-FingerprintV5, research use, not for redistribution"
   }
  ]
 }

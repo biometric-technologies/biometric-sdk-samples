@@ -1,6 +1,8 @@
 name: SDK samples
 
-# Builds the samples against a biometric-sdk branch and runs them on the sample images.
+# Builds the samples against a biometric-sdk ref and runs them on the sample images.
+# jvm/ is the Kotlin check; every other platform exists when <platform>/ci/run.sh exists (see
+# README, "Platform contract").
 # Needs the repository secrets GITLAB_DEPLOY_USER and GITLAB_DEPLOY_TOKEN (read access to the
 # iriscan/datasets group on GitLab), the same as in iris-lab.
 
@@ -11,12 +13,42 @@ on:
         description: 'biometric-sdk branch, tag or commit'
         default: 'iris-v2'
   push:
-    # main: run against iris-v2; auto/<area>: run against the biometric-sdk branch of the same name
-    # (the scheduled autopilot pushes here to test its SDK branch)
+    # main: run against iris-v2. auto/<name>: run against the biometric-sdk branch with the same
+    # name if it exists (the SDK autopilot pushes here to test its SDK branch), else iris-v2 (the
+    # platform autopilot's branches change only the samples)
     branches: [main, 'auto/**']
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      sdk_ref: ${{ steps.sdk.outputs.ref }}
+      java: ${{ steps.p.outputs.java }}
+      web: ${{ steps.p.outputs.web }}
+      c: ${{ steps.p.outputs.c }}
+      android: ${{ steps.p.outputs.android }}
+      ios: ${{ steps.p.outputs.ios }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: sdk
+        run: |
+          ref='${{ inputs.sdk_ref }}'
+          if [ -z "$ref" ]; then
+            ref=iris-v2
+            case "$GITHUB_REF_NAME" in auto/*)
+              git ls-remote --exit-code --heads https://github.com/biometric-technologies/biometric-sdk.git "$GITHUB_REF_NAME" >/dev/null && ref="$GITHUB_REF_NAME" ;;
+            esac
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+      - id: p
+        run: for p in java web c android ios; do echo "$p=$([ -f $p/ci/run.sh ] && echo true || echo false)" >> "$GITHUB_OUTPUT"; done
+
   jvm:
+    needs: detect
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -24,7 +56,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: biometric-technologies/biometric-sdk
-          ref: ${{ inputs.sdk_ref || (startsWith(github.ref_name, 'auto/') && github.ref_name) || 'iris-v2' }}
+          ref: ${{ needs.detect.outputs.sdk_ref }}
           path: sdk
       - name: Sample images
         env:
@@ -45,7 +77,7 @@ jobs:
           gradle-version: '8.14.3'
       - name: Run the JVM sample
         run: |
-          echo "SDK: biometric-sdk@$(git -C sdk rev-parse --short HEAD) (${{ inputs.sdk_ref || (startsWith(github.ref_name, 'auto/') && github.ref_name) || 'iris-v2' }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "SDK: biometric-sdk@$(git -C sdk rev-parse --short HEAD) (${{ needs.detect.outputs.sdk_ref }})" >> "$GITHUB_STEP_SUMMARY"
           set -o pipefail
           gradle -p jvm run --args="$GITHUB_WORKSPACE" --stacktrace 2>&1 | tee build.log
       - name: Report build errors
@@ -74,3 +106,175 @@ jobs:
           name: results-jvm
           path: results
           if-no-files-found: ignore
+
+  linux:
+    needs: detect
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [java, web, c]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+        if: needs.detect.outputs[matrix.platform] == 'true'
+      - uses: actions/checkout@v5
+        if: needs.detect.outputs[matrix.platform] == 'true'
+        with:
+          repository: biometric-technologies/biometric-sdk
+          ref: ${{ needs.detect.outputs.sdk_ref }}
+          path: sdk
+      - name: Sample images
+        if: needs.detect.outputs[matrix.platform] == 'true'
+        env:
+          GITLAB_USER: ${{ secrets.GITLAB_DEPLOY_USER }}
+          GITLAB_TOKEN: ${{ secrets.GITLAB_DEPLOY_TOKEN }}
+        run: scripts/fetch-samples.sh
+      # Face detection on the JVM loads OpenCV highgui, which links GTK 2 (until biometric-sdk #7)
+      - name: GTK 2 for OpenCV highgui
+        if: needs.detect.outputs[matrix.platform] == 'true'
+        run: sudo apt-get update -q && (sudo apt-get install -y -q libgtk2.0-0t64 || sudo apt-get install -y -q libgtk2.0-0)
+      - uses: actions/setup-java@v5
+        if: needs.detect.outputs[matrix.platform] == 'true'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        if: needs.detect.outputs[matrix.platform] == 'true'
+        with:
+          gradle-version: '8.14.3'
+      - name: Run the ${{ matrix.platform }} sample
+        if: needs.detect.outputs[matrix.platform] == 'true'
+        run: |
+          mkdir -p results
+          set -o pipefail
+          bash ${{ matrix.platform }}/ci/run.sh 2>&1 | tee results/${{ matrix.platform }}.log
+      - name: Summary
+        if: always() && needs.detect.outputs[matrix.platform] == 'true'
+        run: |
+          echo "SDK: biometric-sdk@$(git -C sdk rev-parse --short HEAD) (${{ needs.detect.outputs.sdk_ref }})" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f results/${{ matrix.platform }}.md ]; then cat results/${{ matrix.platform }}.md >> "$GITHUB_STEP_SUMMARY"
+          else { echo "### ${{ matrix.platform }}: no results"; echo; echo '```'; grep -E "^e: |error:|What went wrong|FAILED|Exception" results/${{ matrix.platform }}.log | head -40; echo '```'; } > results/${{ matrix.platform }}.md; cat results/${{ matrix.platform }}.md >> "$GITHUB_STEP_SUMMARY"; fi
+      - uses: actions/upload-artifact@v4
+        if: always() && needs.detect.outputs[matrix.platform] == 'true'
+        with:
+          name: results-${{ matrix.platform }}
+          path: results
+
+  android:
+    needs: detect
+    if: needs.detect.outputs.android == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          repository: biometric-technologies/biometric-sdk
+          ref: ${{ needs.detect.outputs.sdk_ref }}
+          path: sdk
+      - name: Sample images
+        env:
+          GITLAB_USER: ${{ secrets.GITLAB_DEPLOY_USER }}
+          GITLAB_TOKEN: ${{ secrets.GITLAB_DEPLOY_TOKEN }}
+        run: scripts/fetch-samples.sh
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Run the Android sample on an emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: mkdir -p results && bash android/ci/run.sh 2>&1 | tee results/android.log
+      - name: Summary
+        if: always()
+        run: |
+          echo "SDK: biometric-sdk@$(git -C sdk rev-parse --short HEAD) (${{ needs.detect.outputs.sdk_ref }})" >> "$GITHUB_STEP_SUMMARY"
+          [ -f results/android.md ] || { echo "### android: no results"; echo; echo '```'; grep -E "^e: |error:|What went wrong|FAILED|Exception" results/android.log | head -40; echo '```'; } > results/android.md
+          cat results/android.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results-android
+          path: results
+
+  ios:
+    needs: detect
+    if: needs.detect.outputs.ios == 'true'
+    runs-on: macos-15
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          repository: biometric-technologies/biometric-sdk
+          ref: ${{ needs.detect.outputs.sdk_ref }}
+          path: sdk
+      - name: Sample images
+        env:
+          GITLAB_USER: ${{ secrets.GITLAB_DEPLOY_USER }}
+          GITLAB_TOKEN: ${{ secrets.GITLAB_DEPLOY_TOKEN }}
+        run: scripts/fetch-samples.sh
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+      - name: Run the iOS sample on a simulator
+        run: |
+          mkdir -p results
+          set -o pipefail
+          bash ios/ci/run.sh 2>&1 | tee results/ios.log
+      - name: Summary
+        if: always()
+        run: |
+          echo "SDK: biometric-sdk@$(git -C sdk rev-parse --short HEAD) (${{ needs.detect.outputs.sdk_ref }})" >> "$GITHUB_STEP_SUMMARY"
+          [ -f results/ios.md ] || { echo "### ios: no results"; echo; echo '```'; grep -E "error:|BUILD FAILED|FAILED|Exception" results/ios.log | head -40; echo '```'; } > results/ios.md
+          cat results/ios.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results-ios
+          path: results
+
+  # One comment on the pull request with every platform's results table, updated on each run,
+  # so the result can be read without opening the Actions page.
+  report:
+    needs: [detect, jvm, linux, android, ios]
+    if: always() && startsWith(github.ref_name, 'auto/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: results-*
+          merge-multiple: true
+          path: results
+      - name: Comment on the pull request of this branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pr=$(gh pr list -R "${{ github.repository }}" --head "$GITHUB_REF_NAME" --state open --json number --jq '.[0].number')
+          [ -n "$pr" ] || { echo "no open pull request for $GITHUB_REF_NAME"; exit 0; }
+          {
+            echo "<!-- sdk-samples -->"
+            echo "Samples for ${{ github.sha }} against biometric-sdk ${{ needs.detect.outputs.sdk_ref }}"
+            echo "(jvm: ${{ needs.jvm.result }}, java/web/c: ${{ needs.linux.result }}, android: ${{ needs.android.result }}, ios: ${{ needs.ios.result }})"
+            echo
+            for f in results/*.md; do [ -f "$f" ] && { cat "$f"; echo; }; done
+          } > comment.md
+          id=$(gh api "repos/${{ github.repository }}/issues/$pr/comments" --paginate --jq '.[] | select(.body | startswith("<!-- sdk-samples -->")) | .id' | head -1)
+          if [ -n "$id" ]; then gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$id" -F body=@comment.md >/dev/null
+          else gh pr comment "$pr" -R "${{ github.repository }}" --body-file comment.md; fi
