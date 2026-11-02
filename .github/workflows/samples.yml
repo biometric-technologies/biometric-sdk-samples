@@ -35,6 +35,7 @@ jobs:
       java: ${{ steps.p.outputs.java }}
       web: ${{ steps.p.outputs.web }}
       c: ${{ steps.p.outputs.c }}
+      visual: ${{ steps.p.outputs.visual }}
       android: ${{ steps.p.outputs.android }}
       ios: ${{ steps.p.outputs.ios }}
     steps:
@@ -73,7 +74,7 @@ jobs:
             echo "changed since main:"; echo "$changed"
           fi
           touches() { echo "$changed" | grep -q "^$1/"; }
-          for p in jvm java web c android ios; do
+          for p in jvm java web c visual android ios; do
             if [ "$p" = jvm ]; then exists=true; else exists=$([ -f $p/ci/run.sh ] && echo true || echo false); fi
             run=false
             if [ "$exists" = true ]; then
@@ -151,7 +152,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [java, web, c]
+        platform: [java, web, c, visual]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -337,7 +338,7 @@ jobs:
       always() && github.event_name == 'push' &&
       (startsWith(github.ref_name, 'auto/java-') || startsWith(github.ref_name, 'auto/web-') ||
        startsWith(github.ref_name, 'auto/android-') || startsWith(github.ref_name, 'auto/ios-') ||
-       startsWith(github.ref_name, 'auto/c-')) &&
+       startsWith(github.ref_name, 'auto/c-') || startsWith(github.ref_name, 'auto/visual-')) &&
       needs.detect.outputs.sdk_ref == 'iris-v2' &&
       !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     runs-on: ubuntu-latest

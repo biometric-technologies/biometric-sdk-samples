@@ -95,7 +95,8 @@ in the same branch that does it.
   `sdk/`, builds the app, runs the check for iris.
 
 ### visual (step-by-step report, shared by all platforms)
-- V1: `visual/`: a small JVM program (Kotlin, built against `sdk/` like `jvm/`) and `visual/run.sh`
+- V1, V2: done by a person (branch auto/visual-report, SDK PR #21 for `IrisExtractor.segment`).
+  Kept for reference: `visual/`: a small JVM program (Kotlin, built against `sdk/` like `jvm/`) and `visual/run.sh`
   that write `results/report.html`, one self-contained page (images inlined as data URIs): per
   image the photo, what the public SDK API gives for it (iris: unwrapped texture from `extract`
   with the mask shown, quality values and issues from `quality().assess`, encoded or the reason;

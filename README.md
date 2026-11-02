@@ -44,6 +44,7 @@ To add images, add entries to the manifest: `source` (`gitlab` with `repository`
 | Web (browser page) | [web](web) | HTTP API for iris and face (a small JVM server); the page itself is the next step. | `sdk/gradlew -p web/server run`, then http://localhost:8080 |
 | Android | android | Planned: app plus instrumented test on an emulator. | (Android Studio, or `android/ci/run.sh` with an emulator running) |
 | iOS | ios | Planned: SwiftUI app plus XCTest on a simulator. | (Xcode on a Mac, or `ios/ci/run.sh`) |
+| Visual report | [visual](visual) | Every image step by step and every pair's score, as one HTML page. | `bash visual/run.sh` |
 | C (console) | c | Needs a Kotlin/Native shared library of the SDK with a C header, which does not exist yet. Iris first. | (`make -C c`, once it exists) |
 
 The scheduled platform autopilot builds the planned ones step by step, one small branch per
@@ -83,12 +84,12 @@ detector of biometric-sdk PR #7 is merged.
 Start from the results table: it names the image that did not encode or the pair that did not
 match as expected, with the score. Then look at that image step by step:
 
-- **Visual report** (planned, step V1 of the autopilot plan): `bash visual/run.sh` writes
-  `results/report.html` with every image and what the SDK did with it: for iris the photo, the
-  segmentation (pupil, limbus, eyelids drawn over it), the unwrapped iris with its mask, the
-  quality values and the iris code; for face the photo, the detected face and the aligned crop;
-  and the score matrix of every pair, coloured by expected and actual result. It runs on your
-  computer only: the iris images may not be published, so CI does not upload it.
+- **Visual report** ([visual](visual)): `bash visual/run.sh` writes `results/report.html` with
+  every image and what the SDK did with it: for iris the photo with the segmentation drawn over it
+  (pupil, limbus, eyelids), the unwrapped iris with its mask, the quality values and the step at
+  which it failed, if it did; for face the photo and the face the extractor cut out; and the
+  score matrix of every pair, red where the SDK decided wrongly. It runs on your computer only:
+  the iris images may not be published, so CI runs it without pictures.
 - **Segmentation debug** of a single iris image, with intermediate stages (dark-disc candidates,
   pupil and limbus search): the private biometric-lab has a workflow for it
   (`iris-segmentation-debug.yml`, input: the image path in the CASIA mirror).
