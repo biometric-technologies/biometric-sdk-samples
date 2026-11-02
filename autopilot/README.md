@@ -1,7 +1,12 @@
 # Autopilot: platform samples
 
 A scheduled task runs every hour. Each run takes the next platform in the rotation and makes one
-small step of its plan below, on its own branch. Rotation order: java → web → android → ios → c.
+small step of its plan below, on its own branch.
+
+Focus (decided 2026-11-02): only tests on the phones, Android and iOS, because platform bugs in
+the SDK (template memory on iOS, image conversion) show up only there. Rotation: android → ios →
+android. Java, web, C and every app screen (A3, I3) wait until the core matchers are fixed; the
+samples that exist (jvm, java, web, visual) stay as regression checks.
 The next platform is the one after the platform of the last line in `log.md`; skip a platform
 whose next step is blocked (waiting for an answer) and say so in the log line.
 
@@ -48,7 +53,7 @@ SDK changes go through review, as pull requests in biometric-sdk.
 Steps are in order; take the first one not done. Mark a step done here (with the branch name)
 in the same branch that does it.
 
-### java (plain Java console application)
+### java (plain Java console application) — postponed
 - J1 (done, #2): `java/` Gradle project (`application` plugin, Java 17), SDK from `../sdk` with `includeBuild`
   as in `jvm/settings.gradle.kts`. `Main.java` reads the manifest, runs the
   check for iris, writes `results/java.md`. `java/ci/run.sh`.
@@ -56,7 +61,7 @@ in the same branch that does it.
 - J3: `java/README.md`: using the SDK from Java (Maven Central coordinates, the few calls needed,
   what the Kotlin types look like from Java).
 
-### web (page in the browser, JVM server behind it)
+### web (page in the browser, JVM server behind it) — postponed
 - W1 (done, #4): `web/server`: Java or Kotlin, JDK `HttpServer`, no framework. `POST /api/encode?modality=iris|face`
   with the image bytes returns the template; `POST /api/compare` two templates returns the score and
   whether they match. `web/ci/run.sh` starts it and runs the check with curl.
@@ -69,12 +74,12 @@ in the same branch that does it.
   clicks every photo and checks who the page says it is; a screenshot goes to `results/`.
 
 ### android (app on an emulator)
-- A1 (done, auto/android-iris-check): `android/` app (Kotlin, one activity), SDK from `../sdk` with `includeBuild`. An instrumented
+- A1 (done, auto/android-iris-check, green on the emulator and merged): `android/` app (Kotlin, one activity), SDK from `../sdk` with `includeBuild`. An instrumented
   test runs the check for iris on images that a Gradle task copies from `../samples/data` into the
   test assets at build time. `android/ci/run.sh` runs `connectedAndroidTest` on the emulator the
   workflow starts and writes `results/android.md` from the test output.
 - A2: face in the test.
-- A3: the activity shows the sample photos and the result of identifying a tapped one.
+- A3 (postponed): the activity shows the sample photos and the result of identifying a tapped one.
 
 ### ios (SwiftUI app on a simulator)
 - I1: build the SDK framework from `sdk/` (its Kotlin CocoaPods setup; TensorFlow Lite comes from
@@ -82,9 +87,9 @@ in the same branch that does it.
   by the script) so the PR diff stays small. An XCTest runs the check for iris on images copied
   into the test bundle at build time. `ios/ci/run.sh` writes `results/ios.md`.
 - I2: face in the test.
-- I3: the app shows the sample photos and the result of identifying a tapped one.
+- I3 (postponed): the app shows the sample photos and the result of identifying a tapped one.
 
-### c (console application on a native SDK library)
+### c (console application on a native SDK library) — postponed
 - C1: `c/DESIGN.md` only: Kotlin/Native targets to add to the SDK (linuxX64 first, macosArm64
   later), what platform code needs `actual`s there (image decoding, resources, logging), iris only
   at first (face needs TensorFlow Lite for that target), the C API (a handful of functions over

@@ -47,7 +47,8 @@ To add images, add entries to the manifest: `source` (`gitlab` with `repository`
 | C (console) | c | Needs a Kotlin/Native shared library of the SDK with a C header, which does not exist yet. Iris first. | (`make -C c`, once it exists) |
 
 The scheduled platform autopilot builds the planned ones step by step, one small branch per
-step; a branch whose samples pass is merged into `main` automatically (only SDK changes go
+step (for now only the Android and iOS tests: the other platforms wait until the core matchers
+are fixed); a branch whose samples pass is merged into `main` automatically (only SDK changes go
 through review, in biometric-sdk). Its plan and rules are in [autopilot/README.md](autopilot/README.md).
 
 ## Getting started on your computer
