@@ -37,18 +37,63 @@ To add images, add entries to the manifest: `source` (`gitlab` with `repository`
 
 ## Platforms
 
-| Platform | Directory | Status |
-|---|---|---|
-| JVM (Kotlin console) | [jvm](jvm) | Iris and face. Runs in CI on every push and on demand for any SDK branch. |
-| Java (plain Java console) | java | Planned: how a Java developer calls the SDK. |
-| Web (browser page) | web | Planned: a plain HTML page; a small JVM server behind it runs the SDK, so iris and face both work. A browser-only (Wasm) build stays a later option. |
-| Android | android | Planned: app plus instrumented test on an emulator in CI. Starting point: [biometric-sdk-android-example](https://github.com/biometric-technologies/biometric-sdk-android-example). |
-| iOS | ios | Planned: SwiftUI app plus XCTest on a simulator (macOS runner). Starting point: [biometric-sdk-ios-example](https://github.com/biometric-technologies/biometric-sdk-ios-example). |
-| C (console) | c | Needs a Kotlin/Native shared library of the SDK with a C header, which does not exist yet. Iris first; face needs TensorFlow Lite for that target. |
+| Platform | Directory | Status | Run it on your computer |
+|---|---|---|---|
+| JVM (Kotlin console) | [jvm](jvm) | Iris and face. The reference check. | `sdk/gradlew -p jvm run` |
+| Java (plain Java console) | [java](java) | Iris; face is the next step. | `sdk/gradlew -p java run` |
+| Web (browser page) | [web](web) | HTTP API for iris and face (a small JVM server); the page itself is the next step. | `sdk/gradlew -p web/server run`, then http://localhost:8080 |
+| Android | android | Planned: app plus instrumented test on an emulator. | (Android Studio, or `android/ci/run.sh` with an emulator running) |
+| iOS | ios | Planned: SwiftUI app plus XCTest on a simulator. | (Xcode on a Mac, or `ios/ci/run.sh`) |
+| C (console) | c | Needs a Kotlin/Native shared library of the SDK with a C header, which does not exist yet. Iris first. | (`make -C c`, once it exists) |
 
 The scheduled platform autopilot builds the planned ones step by step, one small branch per
 step; a branch whose samples pass is merged into `main` automatically (only SDK changes go
 through review, in biometric-sdk). Its plan and rules are in [autopilot/README.md](autopilot/README.md).
+
+## Getting started on your computer
+
+You need JDK 17 or newer and git; Android and iOS need Android Studio or Xcode. On Linux the face
+part of the SDK still needs GTK 2 for OpenCV (`sudo apt install libgtk2.0-0`), until the Haar
+detector of biometric-sdk PR #7 is merged.
+
+1. **Images.** The iris images come from the private Iriscan mirror on GitLab
+   (`gitlab.com/iriscan/datasets`). Ask Artem for access to the group, then either use your own
+   GitLab login (git asks for it) or a personal access token with `read_repository`:
+   ```sh
+   export GITLAB_USER=<your GitLab user> GITLAB_TOKEN=<token>
+   scripts/fetch-samples.sh          # into samples/data/, about 30 MB the first time
+   ```
+   The face photos are public and need nothing.
+2. **SDK source.** Every sample builds against a biometric-sdk checkout in `sdk/`, so you can test
+   any branch, including your own uncommitted changes:
+   ```sh
+   git clone -b iris-v2 https://github.com/biometric-technologies/biometric-sdk sdk
+   # or: ln -s ~/work/biometric-sdk sdk      (your working copy)
+   ```
+3. **Run a sample** (table above), e.g. `sdk/gradlew -p jvm run`. Each prints the score of every
+   comparison and a table, writes `results/<platform>.md`, and exits with 1 if anything was not as
+   expected. Each platform folder has a README with the details.
+4. **Test an SDK branch in CI** without your computer: push a branch with the same name as the
+   SDK branch (e.g. `auto/iris-template-cols`) to this repository; the results appear in
+   `<branch>.md` on the branch `ci-results`. Or **Actions → SDK samples → Run workflow** with the
+   SDK branch, tag or commit.
+
+## When something fails
+
+Start from the results table: it names the image that did not encode or the pair that did not
+match as expected, with the score. Then look at that image step by step:
+
+- **Visual report** (planned, step V1 of the autopilot plan): `bash visual/run.sh` writes
+  `results/report.html` with every image and what the SDK did with it: for iris the photo, the
+  segmentation (pupil, limbus, eyelids drawn over it), the unwrapped iris with its mask, the
+  quality values and the iris code; for face the photo, the detected face and the aligned crop;
+  and the score matrix of every pair, coloured by expected and actual result. It runs on your
+  computer only: the iris images may not be published, so CI does not upload it.
+- **Segmentation debug** of a single iris image, with intermediate stages (dark-disc candidates,
+  pupil and limbus search): the private biometric-lab has a workflow for it
+  (`iris-segmentation-debug.yml`, input: the image path in the CASIA mirror).
+- **Your own photo:** start the web server and send it with curl (see [web](web)), or open the
+  page once it exists.
 
 ### Platform contract
 
@@ -113,8 +158,12 @@ The summary lists every image that failed to encode and every comparison that we
      possibly as an optional detector next to the Haar one. CI installs GTK 2 for now;
   with it, face encodes all 8 photos and all 28 comparisons are as expected (same person 0.25 to
   0.42, different people 1.28 to 1.57, threshold 1.0).
-- **JVM, iris:** 11 of 12 images encoded, all 55 comparisons as expected on iris-v2 (e0e02e4);
-  `iris-000-L-2` is not encoded (no iris found).
+- **JVM, iris:** on iris-v2 at e0e02e4, 11 of 12 images encoded: `iris-000-L-2` was not (the
+  pupil search took a spectacle hinge for the pupil). Fixed by the segmentation changes merged in
+  biometric-sdk PR #12: all 12 encode and all 66 comparisons are as expected (Java sample, 2026-11-02).
+- **JVM, gray images:** `convert(BufferedImage)` read gray JPEGs through `getRGB`, which brightens
+  them (Java treats gray as linear light: 20 became 79). Every CASIA image reached the SDK brighter
+  than on a phone. Fixed in biometric-sdk PR #17; JVM iris templates from gray files change with it.
 
 ## Repository secrets
 

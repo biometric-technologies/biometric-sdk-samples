@@ -94,6 +94,19 @@ in the same branch that does it.
 - C4: `c/` console application (plain C, Makefile) and `c/ci/run.sh`: builds the library from
   `sdk/`, builds the app, runs the check for iris.
 
+### visual (step-by-step report, shared by all platforms)
+- V1: `visual/`: a small JVM program (Kotlin, built against `sdk/` like `jvm/`) and `visual/run.sh`
+  that write `results/report.html`, one self-contained page (images inlined as data URIs): per
+  image the photo, what the public SDK API gives for it (iris: unwrapped texture from `extract`
+  with the mask shown, quality values and issues from `quality().assess`, encoded or the reason;
+  face: the cropped face from the extractor) and the score matrix of all pairs coloured by
+  expected and actual result. Never uploaded by CI (iris images may not be published); CI only
+  checks that it builds and writes the page, with `--no-images` for the CI run.
+- V2 (needs an SDK PR first): the segmentation drawn over the iris photo (pupil and limbus circles,
+  eyelid lines, glints). The SDK has no public API for the segmentation geometry yet: add one in a
+  small biometric-sdk PR (e.g. `IrisExtractor.segment(image): IrisSegmentation?` with the circles
+  and the mask, documented), then use it here. Same for the face box (V3).
+
 ### finger (every platform, later)
 - When biometric-sdk `iris-v2` has a public fingerprint API (biometric-lab `finger/DESIGN.md`,
   steps F1 to F9), add a step "fingerprints in the check" to every platform. Until then the
