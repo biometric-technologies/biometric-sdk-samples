@@ -40,7 +40,7 @@ Steps are in order; take the first one not done. Mark a step done here (with the
 the same PR that does it.
 
 ### java (plain Java console application)
-- J1: `java/` Gradle project (`application` plugin, Java 17), SDK from `../sdk` with `includeBuild`
+- J1 (done, #2): `java/` Gradle project (`application` plugin, Java 17), SDK from `../sdk` with `includeBuild`
   as in `jvm/settings.gradle.kts`. `Main.java` reads the manifest, runs the
   check for iris, writes `results/java.md`. `java/ci/run.sh`.
 - J2: face in the same check.
