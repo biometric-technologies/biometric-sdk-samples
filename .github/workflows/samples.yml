@@ -4,7 +4,7 @@ name: SDK samples
 # jvm/ is the Kotlin check; every other platform exists when <platform>/ci/run.sh exists (see
 # README, "Platform contract").
 # Needs the repository secrets GITLAB_DEPLOY_USER and GITLAB_DEPLOY_TOKEN (read access to the
-# iriscan/datasets group on GitLab), the same as in iris-lab.
+# iriscan/datasets group on GitLab), the same as in biometric-lab.
 
 on:
   workflow_dispatch:
@@ -19,14 +19,19 @@ on:
     branches: [main, 'auto/**']
 
 permissions:
-  contents: read
-  pull-requests: write
+  contents: write
 
 jobs:
+  # Decides the SDK ref and which platforms run. Private-repository minutes are limited (macOS
+  # counts about ten times Linux), so a push runs only what it can affect: on main, on a manual
+  # run and on an SDK branch (auto/<name> that exists in biometric-sdk) every existing platform
+  # except iOS on SDK branches; on a platform branch only the platforms whose folders it changes.
+  # iOS runs on main, on a manual run and when ios/ changes.
   detect:
     runs-on: ubuntu-latest
     outputs:
       sdk_ref: ${{ steps.sdk.outputs.ref }}
+      jvm: ${{ steps.p.outputs.jvm }}
       java: ${{ steps.p.outputs.java }}
       web: ${{ steps.p.outputs.web }}
       c: ${{ steps.p.outputs.c }}
@@ -34,21 +39,55 @@ jobs:
       ios: ${{ steps.p.outputs.ios }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - id: sdk
         run: |
           ref='${{ inputs.sdk_ref }}'
+          sdk_branch=false
           if [ -z "$ref" ]; then
             ref=iris-v2
             case "$GITHUB_REF_NAME" in auto/*)
-              git ls-remote --exit-code --heads https://github.com/biometric-technologies/biometric-sdk.git "$GITHUB_REF_NAME" >/dev/null && ref="$GITHUB_REF_NAME" ;;
+              if git ls-remote --exit-code --heads https://github.com/biometric-technologies/biometric-sdk.git "$GITHUB_REF_NAME" >/dev/null; then
+                ref="$GITHUB_REF_NAME"; sdk_branch=true
+              fi ;;
             esac
           fi
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "sdk_branch=$sdk_branch" >> "$GITHUB_OUTPUT"
       - id: p
-        run: for p in java web c android ios; do echo "$p=$([ -f $p/ci/run.sh ] && echo true || echo false)" >> "$GITHUB_OUTPUT"; done
+        env:
+          SDK_BRANCH: ${{ steps.sdk.outputs.sdk_branch }}
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          everything=false
+          if [ "$EVENT" = workflow_dispatch ] || [ "$GITHUB_REF_NAME" = main ]; then everything=true; fi
+          changed=""
+          # the platform autopilot's log lines and documentation on main run nothing
+          if [ "$EVENT" = push ] && [ "$GITHUB_REF_NAME" = main ] && git cat-file -e "$BEFORE" 2>/dev/null; then
+            if ! git diff --name-only "$BEFORE" HEAD | grep -qvE '^autopilot/|\.md$'; then everything=false; SDK_BRANCH=none; fi
+          fi
+          if [ "$everything" = false ] && [ "$SDK_BRANCH" = false ]; then
+            changed=$(git diff --name-only "$(git merge-base origin/main HEAD)" HEAD)
+            echo "changed since main:"; echo "$changed"
+          fi
+          touches() { echo "$changed" | grep -q "^$1/"; }
+          for p in jvm java web c android ios; do
+            if [ "$p" = jvm ]; then exists=true; else exists=$([ -f $p/ci/run.sh ] && echo true || echo false); fi
+            run=false
+            if [ "$exists" = true ]; then
+              if [ "$everything" = true ]; then run=true
+              elif [ "$SDK_BRANCH" = true ]; then [ "$p" = ios ] || run=true
+              elif touches "$p" || { [ "$p" = jvm ] && touches samples; }; then run=true
+              fi
+            fi
+            echo "$p=$run" | tee -a "$GITHUB_OUTPUT"
+          done
 
   jvm:
     needs: detect
+    if: needs.detect.outputs.jvm == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -252,7 +291,10 @@ jobs:
 
   # One comment on the pull request with every platform's results table, updated on each run,
   # so the result can be read without opening the Actions page.
-  report:
+  # Results of every auto/* branch go to the branch ci-results as <branch>.md (e.g.
+  # ci-results:auto/iris-template-cols.md), where the scheduled autopilots read them with the
+  # GitHub API: they cannot read the Actions run summary, and this repository has no pull requests.
+  results:
     needs: [detect, jvm, linux, android, ios]
     if: always() && startsWith(github.ref_name, 'auto/')
     runs-on: ubuntu-latest
@@ -262,19 +304,62 @@ jobs:
           pattern: results-*
           merge-multiple: true
           path: results
-      - name: Comment on the pull request of this branch
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Write ci-results/${{ github.ref_name }}.md
         run: |
-          pr=$(gh pr list -R "${{ github.repository }}" --head "$GITHUB_REF_NAME" --state open --json number --jq '.[0].number')
-          [ -n "$pr" ] || { echo "no open pull request for $GITHUB_REF_NAME"; exit 0; }
           {
-            echo "<!-- sdk-samples -->"
-            echo "Samples for ${{ github.sha }} against biometric-sdk ${{ needs.detect.outputs.sdk_ref }}"
-            echo "(jvm: ${{ needs.jvm.result }}, java/web/c: ${{ needs.linux.result }}, android: ${{ needs.android.result }}, ios: ${{ needs.ios.result }})"
+            echo "# Samples for $GITHUB_REF_NAME"
+            echo
+            echo "Commit ${{ github.sha }} of biometric-sdk-samples, biometric-sdk ${{ needs.detect.outputs.sdk_ref }}, run ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "Jobs: jvm ${{ needs.jvm.result }}, java/web/c ${{ needs.linux.result }}, android ${{ needs.android.result }}, ios ${{ needs.ios.result }}"
             echo
             for f in results/*.md; do [ -f "$f" ] && { cat "$f"; echo; }; done
-          } > comment.md
-          id=$(gh api "repos/${{ github.repository }}/issues/$pr/comments" --paginate --jq '.[] | select(.body | startswith("<!-- sdk-samples -->")) | .id' | head -1)
-          if [ -n "$id" ]; then gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$id" -F body=@comment.md >/dev/null
-          else gh pr comment "$pr" -R "${{ github.repository }}" --body-file comment.md; fi
+          } > "$RUNNER_TEMP/result.md"
+          git init -q store && cd store
+          git remote add origin "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for i in 1 2 3 4 5; do
+            rm -rf ./* && git fetch -q --depth 1 origin ci-results 2>/dev/null && git checkout -q -B ci-results FETCH_HEAD || git checkout -q --orphan ci-results
+            mkdir -p "$(dirname "$GITHUB_REF_NAME")" && cp "$RUNNER_TEMP/result.md" "$GITHUB_REF_NAME.md"
+            git add -A && git commit -qm "Results for $GITHUB_REF_NAME at ${GITHUB_SHA:0:7}" || exit 0
+            git push -q origin ci-results && exit 0
+            sleep $((i * 5))
+          done
+          exit 1
+
+  # A platform branch (auto/<java|web|android|ios|c>-<topic>, run against iris-v2) whose samples
+  # all passed is merged into main and deleted: the samples are checked by CI, and only SDK changes
+  # go through review. SDK branches here only trigger runs and are never merged. Nothing is merged
+  # if the branch changes the workflows, jvm/ or the manifest (the autopilot must not change them).
+  merge:
+    needs: [detect, jvm, linux, android, ios, results]
+    if: >-
+      always() && github.event_name == 'push' &&
+      (startsWith(github.ref_name, 'auto/java-') || startsWith(github.ref_name, 'auto/web-') ||
+       startsWith(github.ref_name, 'auto/android-') || startsWith(github.ref_name, 'auto/ios-') ||
+       startsWith(github.ref_name, 'auto/c-')) &&
+      needs.detect.outputs.sdk_ref == 'iris-v2' &&
+      !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Merge into main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          base=$(git merge-base origin/main HEAD)
+          if git diff --name-only "$base" HEAD | grep -qE '^(\.github/|jvm/|samples/manifest\.json)'; then
+            echo "::warning::$GITHUB_REF_NAME changes workflows, jvm/ or the manifest: not merged automatically"; exit 0
+          fi
+          if ! git diff --name-only "$base" HEAD | grep -qvE '^autopilot/'; then
+            echo "only autopilot files changed: nothing to merge"; exit 0
+          fi
+          for i in 1 2 3 4 5; do
+            git fetch -q origin main && git checkout -q -B main origin/main
+            git merge -q --no-ff "$GITHUB_SHA" -m "Merge $GITHUB_REF_NAME (samples passed in run ${{ github.run_id }})" || { echo "::error::conflict with main, fix on the branch"; exit 1; }
+            git push -q origin main && git push -q origin --delete "$GITHUB_REF_NAME" && exit 0
+            sleep $((i * 5))
+          done
+          exit 1
