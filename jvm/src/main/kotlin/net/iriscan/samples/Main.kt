@@ -216,6 +216,10 @@ private fun report(root: File, encoded: List<Encoded>, comparisons: List<Compari
     val summary = lines.joinToString("\n")
     println(summary)
     System.getenv("GITHUB_STEP_SUMMARY")?.let { File(it).appendText(summary + "\n") }
+    // the workflow posts results/*.md as a comment on the branch's pull request, where scheduled
+    // runs can read it (they cannot read the Actions run summary)
+    File(root, "results").mkdirs()
+    File(root, "results/jvm.md").writeText("### jvm\n\n$summary\n")
 
     val json = JSONObject()
         .put("platform", "jvm")
