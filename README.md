@@ -51,6 +51,8 @@ sdk/gradlew -p jvm run
 Without `sdk/`, the sample uses the SDK release from Maven Central.
 
 In GitHub Actions: **SDK samples → Run workflow**, with the SDK branch, tag or commit to check.
+A push to a branch `auto/<name>` of this repository runs the samples against the biometric-sdk
+branch with the same name (used by the scheduled autopilot).
 The summary lists every image that failed to encode and every comparison that went wrong.
 
 ## What the samples found
