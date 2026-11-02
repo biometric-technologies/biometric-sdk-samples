@@ -42,7 +42,7 @@ To add images, add entries to the manifest: `source` (`gitlab` with `repository`
 | JVM (Kotlin console) | [jvm](jvm) | Iris and face. The reference check. | `sdk/gradlew -p jvm run` |
 | Java (plain Java console) | [java](java) | Iris; face is the next step. | `sdk/gradlew -p java run` |
 | Web (browser page) | [web](web) | HTTP API for iris and face (a small JVM server); the page itself is the next step. | `sdk/gradlew -p web/server run`, then http://localhost:8080 |
-| Android | android | Planned: app plus instrumented test on an emulator. | (Android Studio, or `android/ci/run.sh` with an emulator running) |
+| Android | [android](android) | Iris, in an instrumented test on an emulator; face is the next step. | `bash android/ci/run.sh` with an emulator or device on adb, or Android Studio |
 | iOS | ios | Planned: SwiftUI app plus XCTest on a simulator. | (Xcode on a Mac, or `ios/ci/run.sh`) |
 | C (console) | c | Needs a Kotlin/Native shared library of the SDK with a C header, which does not exist yet. Iris first. | (`make -C c`, once it exists) |
 
