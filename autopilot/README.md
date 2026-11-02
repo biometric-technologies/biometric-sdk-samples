@@ -48,10 +48,12 @@ the same PR that does it.
   what the Kotlin types look like from Java).
 
 ### web (page in the browser, JVM server behind it)
-- W1: `web/server`: Java or Kotlin, JDK `HttpServer`, no framework. `POST /api/encode?modality=iris|face`
+- W1 (done, #4): `web/server`: Java or Kotlin, JDK `HttpServer`, no framework. `POST /api/encode?modality=iris|face`
   with the image bytes returns the template; `POST /api/compare` two templates returns the score and
-  whether they match; `POST /api/identify?modality=…` returns the best person of the sample gallery.
-  `web/ci/run.sh` starts it and runs the check with curl.
+  whether they match. `web/ci/run.sh` starts it and runs the check with curl.
+- W1b (split from W1 to keep the PRs small): `POST /api/identify?modality=…` returns the best person
+  of the sample gallery (the sample photos, encoded at start; `exclude=<id>` leaves one photo out);
+  `web/ci/run.sh` also identifies every photo among the other photos.
 - W2: `web/static/index.html` (plain HTML and JS, no build step): the sample photos as a grid,
   click one or upload your own, see who it is and the score. The server serves it.
 - W3: `web/ci/run.sh` drives the page with Playwright (installed by the script) instead of curl,
