@@ -1,6 +1,6 @@
 # Samples for auto/face-model-sizes
 
-Commit a430dd0635f773b4d6ad7be6b4e3c82b16f5c047 of biometric-sdk-samples, biometric-sdk auto/face-model-sizes, run https://github.com/biometric-technologies/biometric-sdk-samples/actions/runs/41970048066
+Commit 4af6bb0e6a630faa8ee4654db9ec1f11ac318c6f of biometric-sdk-samples, biometric-sdk auto/face-model-sizes, run https://github.com/biometric-technologies/biometric-sdk-samples/actions/runs/41970079355
 Jobs: jvm success, java/web/c success, android success, ios skipped
 
 ### android
@@ -25,11 +25,11 @@ Failures: none
 
 ### iris: 12 of 12 images encoded, 66 of 66 comparisons as expected
 
-Same person: 12 of 12 match, scores 0.707 to 0.991. Different people: 54 of 54 do not match, scores 0.522 to 0.624. Average encoding time 200 ms.
+Same person: 12 of 12 match, scores 0.707 to 0.991. Different people: 54 of 54 do not match, scores 0.522 to 0.624. Average encoding time 231 ms.
 
 ### face: 8 of 8 images encoded, 28 of 28 comparisons as expected
 
-Same person: 4 of 4 match, scores 0.247 to 0.421. Different people: 24 of 24 do not match, scores 1.280 to 1.565. Average encoding time 263 ms.
+Same person: 4 of 4 match, scores 0.247 to 0.421. Different people: 24 of 24 do not match, scores 1.280 to 1.565. Average encoding time 268 ms.
 
 All expectations met.
 
