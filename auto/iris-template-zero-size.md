@@ -1,6 +1,6 @@
 # Samples for auto/iris-template-zero-size
 
-Commit db69fb6f3207f1744f5cb11acb182177e100164e of biometric-sdk-samples, biometric-sdk auto/iris-template-zero-size, run https://github.com/biometric-technologies/biometric-sdk-samples/actions/runs/41972771331
+Commit a430dd0635f773b4d6ad7be6b4e3c82b16f5c047 of biometric-sdk-samples, biometric-sdk auto/iris-template-zero-size, run https://github.com/biometric-technologies/biometric-sdk-samples/actions/runs/41972756437
 Jobs: jvm success, java/web/c success, android success, ios skipped
 
 ### android
@@ -25,11 +25,11 @@ Failures: none
 
 ### iris: 12 of 12 images encoded, 66 of 66 comparisons as expected
 
-Same person: 12 of 12 match, scores 0.707 to 0.991. Different people: 54 of 54 do not match, scores 0.522 to 0.624. Average encoding time 269 ms.
+Same person: 12 of 12 match, scores 0.707 to 0.991. Different people: 54 of 54 do not match, scores 0.522 to 0.624. Average encoding time 217 ms.
 
 ### face: 8 of 8 images encoded, 28 of 28 comparisons as expected
 
-Same person: 4 of 4 match, scores 0.247 to 0.421. Different people: 24 of 24 do not match, scores 1.280 to 1.565. Average encoding time 281 ms.
+Same person: 4 of 4 match, scores 0.247 to 0.421. Different people: 24 of 24 do not match, scores 1.280 to 1.565. Average encoding time 274 ms.
 
 All expectations met.
 
