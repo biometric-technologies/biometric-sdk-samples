@@ -1,6 +1,6 @@
 # Samples for auto/iris-srgb-segmentation
 
-Commit 5233e5a6e770928b1be5956c3a175d6473c03955 of biometric-sdk-samples, biometric-sdk auto/iris-srgb-segmentation, run https://github.com/biometric-technologies/biometric-sdk-samples/actions/runs/41951018542
+Commit a430dd0635f773b4d6ad7be6b4e3c82b16f5c047 of biometric-sdk-samples, biometric-sdk auto/iris-srgb-segmentation, run https://github.com/biometric-technologies/biometric-sdk-samples/actions/runs/41951005958
 Jobs: jvm success, java/web/c success, android success, ios skipped
 
 ### android
@@ -25,11 +25,11 @@ Failures: none
 
 ### iris: 12 of 12 images encoded, 66 of 66 comparisons as expected
 
-Same person: 12 of 12 match, scores 0.674 to 1.000. Different people: 54 of 54 do not match, scores 0.510 to 0.595. Average encoding time 288 ms.
+Same person: 12 of 12 match, scores 0.674 to 1.000. Different people: 54 of 54 do not match, scores 0.510 to 0.595. Average encoding time 186 ms.
 
 ### face: 8 of 8 images encoded, 28 of 28 comparisons as expected
 
-Same person: 4 of 4 match, scores 0.247 to 0.421. Different people: 24 of 24 do not match, scores 1.280 to 1.565. Average encoding time 316 ms.
+Same person: 4 of 4 match, scores 0.247 to 0.421. Different people: 24 of 24 do not match, scores 1.280 to 1.565. Average encoding time 243 ms.
 
 All expectations met.
 
