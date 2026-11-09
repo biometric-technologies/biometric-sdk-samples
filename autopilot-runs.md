@@ -1,0 +1,1 @@
+- 2026-11-09T09:12Z feat/jvm-blazeface: biometric-sdk 9d8c26b, JVM face detection with BlazeFace, OpenCV removed (PR #31)
