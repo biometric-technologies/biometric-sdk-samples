@@ -102,11 +102,18 @@ jobs:
           GITLAB_USER: ${{ secrets.GITLAB_DEPLOY_USER }}
           GITLAB_TOKEN: ${{ secrets.GITLAB_DEPLOY_TOKEN }}
         run: scripts/fetch-samples.sh
-      # The SDK's face part loads OpenCV (org.bytedeco 4.6.0-1.5.8), whose objdetect module links
-      # GTK 2 through highgui. Runner images no longer ship GTK 2, nor do most servers: install it
-      # here so face is tested; the missing-libraries step below shows what a server needs.
+      # The SDK's face part loads OpenCV (org.bytedeco 4.6.0-1.5.8) until biometric-sdk #31, and its
+      # objdetect module links GTK 2 through highgui. Runner images no longer ship GTK 2, nor do most
+      # servers: install it here so face is tested; the missing-libraries step below shows what a
+      # server needs. On 2026-11-11 the Ubuntu mirrors stopped resolving for 20 minutes and apt
+      # failed both runs of a branch: hence the retries and the 5-minute limit.
       - name: GTK 2 for OpenCV highgui
-        run: sudo apt-get update -q && (sudo apt-get install -y -q libgtk2.0-0t64 || sudo apt-get install -y -q libgtk2.0-0)
+        timeout-minutes: 5
+        run: |
+          # Only SDK branches that still depend on OpenCV need it (gone with biometric-sdk #31).
+          if ! grep -q 'org.bytedeco:opencv' sdk/build.gradle.kts; then echo "SDK without OpenCV: GTK 2 not needed"; exit 0; fi
+          apt='sudo apt-get -q -o Acquire::Retries=5'
+          $apt update && ($apt install -y libgtk2.0-0t64 || $apt install -y libgtk2.0-0)
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -169,10 +176,15 @@ jobs:
           GITLAB_USER: ${{ secrets.GITLAB_DEPLOY_USER }}
           GITLAB_TOKEN: ${{ secrets.GITLAB_DEPLOY_TOKEN }}
         run: scripts/fetch-samples.sh
-      # Face detection on the JVM loads OpenCV highgui, which links GTK 2 (until biometric-sdk #7)
+      # Face detection on the JVM loads OpenCV highgui, which links GTK 2 (until biometric-sdk #31)
       - name: GTK 2 for OpenCV highgui
         if: needs.detect.outputs[matrix.platform] == 'true'
-        run: sudo apt-get update -q && (sudo apt-get install -y -q libgtk2.0-0t64 || sudo apt-get install -y -q libgtk2.0-0)
+        timeout-minutes: 5
+        run: |
+          # Only SDK branches that still depend on OpenCV need it (gone with biometric-sdk #31).
+          if ! grep -q 'org.bytedeco:opencv' sdk/build.gradle.kts; then echo "SDK without OpenCV: GTK 2 not needed"; exit 0; fi
+          apt='sudo apt-get -q -o Acquire::Retries=5'
+          $apt update && ($apt install -y libgtk2.0-0t64 || $apt install -y libgtk2.0-0)
       - uses: actions/setup-java@v5
         if: needs.detect.outputs[matrix.platform] == 'true'
         with:
